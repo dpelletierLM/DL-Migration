@@ -58,7 +58,7 @@ def get_graph_access_token():
 #Get Groups from Azure AD using Graph API
 def get_groups(authorization_token):
     """Gets all groups in AD in Azure"""
-
+    page = 1
     get_groups_URL = f'{graph_URL}/v1.0/groups'
     group_IDs.append("GroupID," + "GroupTypes,"+"GroupDisplayName," + "GroupEmail") # Add column headers to list
     get_groups_headers = {
@@ -77,6 +77,7 @@ def get_groups(authorization_token):
             json_data = json.loads(get_groups_response.text)
             get_groups_next_page = json_data["@odata.nextLink"] # Fetch next page
             get_groups_URL = get_groups_next_page
+            
 
             get_groups_response_body = get_groups_response.json()
             #Format JSON to make it easier to read and output it to a file
@@ -84,7 +85,7 @@ def get_groups(authorization_token):
             get_group_output = open("PythonGroupInfoOutput.txt", "a") # Open file to write JSON output to
             get_group_output.write(get_groups_json_formmatted_str)
             get_group_output.close # Close file
-
+            print("Page "+str(page))
             group_values = get_groups_response_body['value'] 
             for item in group_values:
 
@@ -93,10 +94,10 @@ def get_groups(authorization_token):
                 group_Type = item['groupTypes']
                 group_displayName = item['displayName']
                 group_mail = item['mail']
-                print(group_ID)
-                print(group_Type)
-                print(group_displayName)
-                print(group_mail)
+                #print(group_ID)
+                #print(group_Type)
+                #print(group_displayName)
+                #print(group_mail)
                 #Write group info to file
                 get_group_ID_Info.write(str(group_ID))
                 get_group_ID_Info.write(",")
@@ -109,7 +110,11 @@ def get_groups(authorization_token):
                 get_group_ID_Info.write('\n')
 
                 get_group_ID_Info.close # Close file 
-                     
+
+                group_IDs.append({'Group_ID': group_ID, 'group_displayName': group_displayName, 'group_mail': group_mail, 'group_Type': group_Type})  
+            page = page + 1
+            print("Page is now "+ str(page))
+        return group_IDs 
              
 #Get List of Group Owners Using Graph API
 def get_owners():
@@ -119,4 +124,6 @@ def get_owners():
 
 authorization_token = get_graph_access_token() # Sets authorization token variable to the value returned from get graph access token function
 
-get_groups(authorization_token)
+get_group_IDs = get_groups(authorization_token)
+#print(get_group_IDs)
+#print("Group ID Info above")
