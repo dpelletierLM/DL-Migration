@@ -14,9 +14,9 @@ to_date = date.today()
 timenow = datetime.now()
 current_time = timenow.strftime("%H:%M:%S")
 
-clientId = "ed629446-39a5-4c06-90e5-266f636444b6"
-clientSecret = ".A~LjDJHl01MaTGeEhQKdK8A~U_pEpz997"
-tenantId = "08a83339-90e7-49bf-9075-957ccd561bf1"
+clientId = "clientId"
+clientSecret = "clientSecret"
+tenantId = "tenantId"
 scopeInfo = "https%3A%2F%2Fgraph.microsoft.com%2F.default"
 graph_URL = "https://graph.microsoft.com"
 
@@ -75,9 +75,7 @@ def get_groups(authorization_token):
         get_groups_response = requests.get(url=get_groups_URL, headers=get_groups_headers, data=get_groups_body)
         if get_groups_response.status_code == 200:            
             json_data = json.loads(get_groups_response.text)
-            get_groups_next_page = json_data["@odata.nextLink"] # Fetch next page
-            get_groups_URL = get_groups_next_page
-            
+            get_groups_URL = json_data["@odata.nextLink"] # Fetch next page of data                     
 
             get_groups_response_body = get_groups_response.json()
             #Format JSON to make it easier to read and output it to a file
@@ -113,8 +111,8 @@ def get_groups(authorization_token):
 
                 group_IDs.append({'Group_ID': group_ID, 'group_displayName': group_displayName, 'group_mail': group_mail, 'group_Type': group_Type})  
             page = page + 1
-            print("Page is now "+ str(page))
-        return group_IDs 
+            
+    return group_IDs 
              
 #Get List of Group Owners Using Graph API
 def get_owners():
@@ -125,5 +123,5 @@ def get_owners():
 authorization_token = get_graph_access_token() # Sets authorization token variable to the value returned from get graph access token function
 
 get_group_IDs = get_groups(authorization_token)
-#print(get_group_IDs)
-#print("Group ID Info above")
+print(get_group_IDs)
+print("Group ID Info above")
