@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
+
 from asyncore import write
+from itertools import count
 from pprint import pprint
 from tokenize import group
 import requests
 import json
 from datetime import datetime, date
 
+#-------Define Variables----------
 from_date = date.today()
 to_date = date.today()
 timenow = datetime.now()
@@ -17,6 +20,12 @@ tenantId = "08a83339-90e7-49bf-9075-957ccd561bf1"
 scopeInfo = "https%3A%2F%2Fgraph.microsoft.com%2F.default"
 graph_URL = "https://graph.microsoft.com"
 
+group_IDs = []
+group_owners = []
+
+#------Define Functions---------
+
+#Get access token for Graph API connections
 def get_graph_access_token():
     """Returns the access token needed to use API calls with MS Graph"""
 
@@ -46,15 +55,12 @@ def get_graph_access_token():
     #print(authorization_token)
     return authorization_token # returns the authorization token value from the function block to the authorization token variable outside of this function so it can be
 
-authorization_token = get_graph_access_token() # Sets authorization token variable to the value returned from get graph access token function
-
-graph_URL = "https://graph.microsoft.com"
-
+#Get Groups from Azure AD using Graph API
 def get_groups(authorization_token):
     """Gets all groups in AD in Azure"""
 
     get_groups_URL = f'{graph_URL}/v1.0/groups'
-    
+    group_IDs.append("GroupID," + "GroupTypes,"+"GroupDisplayName," + "GroupEmail") # Add column headers to list
     get_groups_headers = {
         'Authorization': authorization_token
     }
@@ -62,36 +68,55 @@ def get_groups(authorization_token):
     get_groups_body = {
     }
 
-    count = 0
-
     while True:
         if not get_groups_URL:
             break
 
         get_groups_response = requests.get(url=get_groups_URL, headers=get_groups_headers, data=get_groups_body)
-        if get_groups_response.status_code == 200:
-            get_groups_response.raise_for_status()
+        if get_groups_response.status_code == 200:            
             json_data = json.loads(get_groups_response.text)
             get_groups_next_page = json_data["@odata.nextLink"] # Fetch next page
             get_groups_URL = get_groups_next_page
 
             get_groups_response_body = get_groups_response.json()
+            #Format JSON to make it easier to read and output it to a file
             get_groups_json_formmatted_str = json.dumps(get_groups_response_body, indent=0)
-            group_ids = get_groups_response_body['value'] 
-            
-            g = open("PythonGroupIDoutput.txt", "a")
-            g.write(get_groups_json_formmatted_str)
-            g.close
-            f = open("PythonOutput.txt", "a")
-            
-            for group in group_ids:
-                f.write(group['id']+"\n")
-                print(group['id'])
-                count = count + 1
+            get_group_output = open("PythonGroupInfoOutput.txt", "a") # Open file to write JSON output to
+            get_group_output.write(get_groups_json_formmatted_str)
+            get_group_output.close # Close file
 
-            f.close()
+            group_values = get_groups_response_body['value'] 
+            for item in group_values:
 
-            print(count)
-        #print(group_ids)
+                get_group_ID_Info = open("PythonGroupIDOutput.txt", "a") # Open file to append items to
+                group_ID = item['id']
+                group_Type = item['groupTypes']
+                group_displayName = item['displayName']
+                group_mail = item['mail']
+                print(group_ID)
+                print(group_Type)
+                print(group_displayName)
+                print(group_mail)
+                #Write group info to file
+                get_group_ID_Info.write(str(group_ID))
+                get_group_ID_Info.write(",")
+                get_group_ID_Info.write(str(group_displayName))
+                get_group_ID_Info.write(",")
+                get_group_ID_Info.write(str(group_mail))
+                get_group_ID_Info.write(",")
+                get_group_ID_Info.write(str(group_Type))
+                get_group_ID_Info.write(",")
+                get_group_ID_Info.write('\n')
+
+                get_group_ID_Info.close # Close file 
+                     
+             
+#Get List of Group Owners Using Graph API
+def get_owners():
+    write("not complete")
+
+#-------Start Script--------
+
+authorization_token = get_graph_access_token() # Sets authorization token variable to the value returned from get graph access token function
 
 get_groups(authorization_token)
