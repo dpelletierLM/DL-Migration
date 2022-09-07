@@ -73,12 +73,13 @@ def get_groups(authorization_token):
             get_groups_response.raise_for_status()
             json_data = json.loads(get_groups_response.text)
             get_groups_next_page = json_data["@odata.nextLink"] # Fetch next page
+            get_groups_URL = get_groups_next_page
 
             get_groups_response_body = get_groups_response.json()
             get_groups_json_formmatted_str = json.dumps(get_groups_response_body, indent=0)
             group_ids = get_groups_response_body['value'] 
             
-            g = open("PythonGroupIDoutput.txt", "w")
+            g = open("PythonGroupIDoutput.txt", "a")
             g.write(get_groups_json_formmatted_str)
             g.close
             f = open("PythonOutput.txt", "a")
