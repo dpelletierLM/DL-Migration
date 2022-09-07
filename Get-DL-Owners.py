@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+from asyncore import write
 from pprint import pprint
+from tokenize import group
 import requests
 import json
 from datetime import datetime, date
@@ -25,7 +27,6 @@ def get_graph_access_token():
         'Content-Type': 'application/x-www-form-urlencoded'
     }
 
-
     body = {
         'client_id': clientId,
         'scope': 'https://graph.microsoft.com/.default',
@@ -33,7 +34,6 @@ def get_graph_access_token():
         'grant_type': 'client_credentials',
         'tenant': tenantId
     }
-
 
     response = requests.post(url=token_URL, headers=headers, data=body)
     response.raise_for_status()
@@ -47,7 +47,6 @@ def get_graph_access_token():
     return authorization_token # returns the authorization token value from the function block to the authorization token variable outside of this function so it can be
 
 authorization_token = get_graph_access_token() # Sets authorization token variable to the value returned from get graph access token function
-
 
 graph_URL = "https://graph.microsoft.com"
 
@@ -63,13 +62,35 @@ def get_groups(authorization_token):
     get_groups_body = {
     }
 
-    get_groups_response = requests.get(url=get_groups_URL, headers=get_groups_headers, data=get_groups_body)
-    get_groups_response.raise_for_status()
-    get_groups_response_body = get_groups_response.json()
-    group_ids = get_groups_response_body['value'] 
-    for group in group_ids:
-        print(group['id'])
+    count = 0
 
-    #print(group_ids)
+    while True:
+        if not get_groups_URL:
+            break
+
+        get_groups_response = requests.get(url=get_groups_URL, headers=get_groups_headers, data=get_groups_body)
+        if get_groups_response.status_code == 200:
+            get_groups_response.raise_for_status()
+            json_data = json.loads(get_groups_response.text)
+            get_groups_next_page = json_data["@odata.nextLink"] # Fetch next page
+
+            get_groups_response_body = get_groups_response.json()
+            get_groups_json_formmatted_str = json.dumps(get_groups_response_body, indent=0)
+            group_ids = get_groups_response_body['value'] 
+            
+            g = open("PythonGroupIDoutput.txt", "w")
+            g.write(get_groups_json_formmatted_str)
+            g.close
+            f = open("PythonOutput.txt", "a")
+            
+            for group in group_ids:
+                f.write(group['id']+"\n")
+                print(group['id'])
+                count = count + 1
+
+            f.close()
+
+            print(count)
+        #print(group_ids)
 
 get_groups(authorization_token)
